@@ -1,0 +1,3 @@
+[submodule "HC"]
+	path = HC
+	url = git://github.com/vrld/HC.git
