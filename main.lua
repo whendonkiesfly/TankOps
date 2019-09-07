@@ -1,4 +1,6 @@
--- Example: Moving stuff with the keyboard
+HC = require 'HC'
+
+
 
 HULL_PNG_PATH = "assets/tanks/PNG/Hulls_Color_%s/Hull_%02d.png"
 WEAPON_PNG_PATH = "assets/tanks/PNG/Weapon_Color_%s/Gun_%02d.png"
@@ -6,19 +8,30 @@ BULLET_PNG_PATH = "assets/tanks/PNG/Effects/%s.png"
 
 
 BULLET_TYPES = {
-    granade = "Granade_Shell",
-    light = "Light_Shell",
-    medium = "Medium_Shell",
-    heavy = "Heavy_Shell",
-    laser = "Laser",
-    plasma = "Plasma",
-    shotgun = "Shotgun_Shells",
-    sniper = "Sniper_Shell",
+    granade = {name="Granade_Shell", width=20, height=20},
+    light = {name="Light_Shell", width=20, height=20},
+    medium = {name="Medium_Shell", width=20, height=20},
+    heavy = {name="Heavy_Shell", width=20, height=20},
+    laser = {name="Laser", width=20, height=20},
+    plasma = {name="Plasma", width=20, height=20},
+    shotgun = {name="Shotgun_Shells", width=20, height=20},
+    sniper = {name="Sniper_Shell", width=20, height=20},
 }
 
-active_bullets = {}
+
+sprites = {}
 
 
+SPRITE_TYPES = {
+    BULLET = "bullet",
+    TANK_HULL = "hull",
+    TANK_WEAPON = "weapon",
+}
+
+
+for _, type in pairs(SPRITE_TYPES) do
+    sprites[type] = {}
+end
 -----------------------------------------------TODO: NEED TO GET RID OF BULLETS AT SOME POINT.
 
 
@@ -34,11 +47,30 @@ WEAPON_INFO = {
 }
 
 
+HULL_INFO = {
+    {width=300, height=450},  -- Hull 1----TODO: OFFSET OR SOMETHING? WHY ISN'T THIS ALIGNED?
+    {width=300, height=450},  -- Hull 2
+    {width=300, height=450},  -- Hull 3
+    {width=300, height=450},  -- Hull 4
+    {width=300, height=450},  -- Hull 5
+    {width=300, height=450},  -- Hull 6
+    {width=300, height=450},  -- Hull 7
+    {width=300, height=450},  -- Hull 8
+}
+
+
+currentID = 0
+function getNextID()
+    currentID = currentID + 1
+    return currentID
+end
+
+
 
 --hullNum can be 1 through 8 and letter can be A through D.
 function CreateTankHull(hullNum, colorLetter)
     local imagePath = string.format(HULL_PNG_PATH, colorLetter, hullNum)
-    local hull = CreateSprite(imagePath, nil, -80)---TODO: MAYBE DIFFERENT TANKS SHOULD HAVE A DIFFERENT THIRD PARAMETER.
+    local hull = CreateSprite(SPRITE_TYPES.TANK_HULL, imagePath, nil, -80, HULL_INFO[hullNum])---TODO: MAYBE DIFFERENT TANKS SHOULD HAVE A DIFFERENT THIRD PARAMETER.
     hull.hullNum = hullNum
     return hull
 end
@@ -46,7 +78,7 @@ end
 
 function CreateTankWeapon(weaponNum, colorLetter)
     local imagePath = string.format(WEAPON_PNG_PATH, colorLetter, weaponNum)
-    local weapon = CreateSprite(imagePath, nil, WEAPON_INFO[weaponNum].rotationPoint)
+    local weapon = CreateSprite(SPRITE_TYPES.TANK_WEAPON, imagePath, nil, WEAPON_INFO[weaponNum].rotationPoint)
     weapon.weaponNum = weaponNum
 
     function weapon.tipPosition(weapon)
@@ -65,6 +97,7 @@ function CreateTank(hullNum, weaponNum, colorLetter)
     tank = {}
     tank.hull = CreateTankHull(hullNum, colorLetter)
     tank.weapon = CreateTankWeapon(hullNum, colorLetter)
+    tank.id = getNextID()
 
     function tank.setPosition(tank, hullX, hullY, hullAngle, weaponAngle)
         tank.hull:setPosition(hullX, hullY, hullAngle)
@@ -90,8 +123,8 @@ function CreateTank(hullNum, weaponNum, colorLetter)
 end
 
 
-
-function CreateSprite(imagePath, rotationPointX, rotationPointY)-----TODO: CACHE THINGS SO WE DON'T HAVE TO LOAD FROM DISK EACH SHOT.
+--hitboxInfo can be nill. If not, needs a width and height.
+function CreateSprite(type, imagePath, rotationPointX, rotationPointY, hitboxInfo)-----TODO: CACHE THINGS SO WE DON'T HAVE TO LOAD FROM DISK EACH SHOT.
     local image=love.graphics.newImage(imagePath)
 
     if rotationPointX == nil then
@@ -110,13 +143,26 @@ function CreateSprite(imagePath, rotationPointX, rotationPointY)-----TODO: CACHE
         rotationPointY = image:getPixelHeight() + rotationPointY
     end
 
-    return {
+    local posX = 0
+    local posY = 0
+
+    local hitbox = nil
+    if hitboxInfo then
+        local halfWidth = hitboxInfo.width / 2
+        local halfHeight = hitboxInfo.height / 2
+        hitbox = HC.rectangle(posX - halfWidth, posY - halfHeight, posX + halfWidth, posY + halfHeight)
+    end
+
+    sprite = {
         _image = image,
         _rotatePointX = rotationPointX,
         _rotatePointY = rotationPointY,
-        _posX = 0,
-        _posY = 0,
+        _posX = posX,
+        _posY = posY,
+        id = getNextID(),
         _angle = 0,
+        hitbox = hitbox,
+        type = type,
 
         draw = function(self)
             love.graphics.draw(self._image, self._posX, self._posY, -self._angle, 1, 1, self._rotatePointX, self._rotatePointY)
@@ -126,33 +172,47 @@ function CreateSprite(imagePath, rotationPointX, rotationPointY)-----TODO: CACHE
             self._posX = x
             self._posY = y
             self._angle = angle
+            if self.hitbox then
+                self.hitbox:moveTo(self._posX, self._posY)
+                self.hitbox:setRotation(-self._angle)
+            end
         end,
 
         offsetPosition = function(self, x, y, angle)
             self._posX = self._posX + x
             self._posY = self._posY + y
             self._angle = self._angle + angle
+            if self.hitbox then
+                self.hitbox:moveTo(self._posX, self._posY)
+                self.hitbox:setRotation(-self._angle)
+            end
         end,
 
         getPosition = function(self)
             return self._posX, self._posY, self._angle
         end,
     }
+
+    --Keep track of this sprite.
+    table.insert(sprites[type], sprite)
+
+    return sprite
 end
 
 
 --Pass in one of the values from the BULLET_TYPES table.
-function CreateBullet(bulletType)
-    local imagePath = string.format(BULLET_PNG_PATH, bulletType)
-    local sprite = CreateSprite(imagePath, nil, nil)
+function CreateBullet(bulletInfo, ownerID)
+    local imagePath = string.format(BULLET_PNG_PATH, bulletInfo.name)
+    local sprite = CreateSprite(SPRITE_TYPES.BULLET, imagePath, nil, nil, bulletInfo)
     sprite.speed = 500---TODO: GET THIS FROM A TABLE OR SOMETHING.
-
     function sprite.processMovement(bullet, dt)  -- TODO: ABSTRACT THIS TO PROJECTILE MAYBE
         local x, y, angle = bullet:getPosition()
         x = x - math.sin(angle) * sprite.speed * dt
         y = y - math.cos(angle) * sprite.speed * dt
         bullet:setPosition(x, y, angle)
     end
+
+    sprite.ownerID = ownerID
 
     return sprite
 end
@@ -174,35 +234,47 @@ end
 
 
 function love.load()
-    tank = CreateTank(1, 1, "A")
-    tank:setPosition(200, 200, 0, 0)
+    myTank = CreateTank(1, 1, "A")
+    myTank:setPosition(200, 200, 0, 0)
 
+    tankList = {myTank, CreateTank(2, 2, "B")}
+    tankList[2]:setPosition(400, 400, 0, 0)
 end
 
 function love.update(dt)
     local speed = 0
     local angleOffset = 0
-    if love.keyboard.isDown("left") then
-	-- x = x - 100 * dt
+    if love.keyboard.isDown("a") then
         angleOffset = (angleOffset + math.pi / 5) * dt
     end
-    if love.keyboard.isDown("right") then
+    if love.keyboard.isDown("d") then
         angleOffset = (angleOffset - math.pi / 5) * dt
     end
-    if love.keyboard.isDown("up") then
-	-- y = y - 100 * dt
+    if love.keyboard.isDown("w") then
         speed = speed - 100
     end
-    if love.keyboard.isDown("down") then
+    if love.keyboard.isDown("s") then
         speed = speed + 100
     end
 
-    local tankX, tankY, angle = tank.hull:getPosition()
+    local tankX, tankY, angle = myTank.hull:getPosition()
     angle = angle + angleOffset * dt
     local xOffset = math.sin(angle) * speed * dt
     local yOffset = math.cos(angle) * speed * dt
 
-    tank.hull:offsetPosition(xOffset, yOffset, angleOffset)
+    local currentX, currentY, currentAngle = myTank.hull:getPosition()
+
+    myTank.hull:offsetPosition(xOffset, yOffset, angleOffset)
+
+    --Make sure this didn't cause collisions.
+    for i, otherTank in ipairs(tankList) do
+        if myTank.hull.hitbox:collidesWith(otherTank.hull.hitbox) then
+            myTank.hull:setPosition(currentX, currentY, currentAngle)
+            break
+        end
+    end
+
+
 
 
 
@@ -219,29 +291,52 @@ function love.update(dt)
         end
     end
 
-    tank:setWeaponAngle(weaponAngle)
+    myTank:setWeaponAngle(weaponAngle)
 
 
 
-    for i, bullet in ipairs(active_bullets) do
+    for i, bullet in ipairs(sprites[SPRITE_TYPES.BULLET]) do
         bullet:processMovement(dt)
+    end
+
+
+    ---TODO: IF THIS IS SLOW, LOOK INTO SPACIAL HASH IN HC LIBRARY.
+    for i, bullet in ipairs(sprites[SPRITE_TYPES.BULLET]) do
+        for j, tank in ipairs(tankList) do
+            if bullet.ownerID ~= tank.id then
+                if bullet.hitbox:collidesWith(tank.hull.hitbox) then
+                    print("hit!")
+                end
+            end
+        end
     end
 
 end
 
 function love.mousepressed( x, y, button, istouch, presses )
-    print("press", x, y)
-    local bullet = CreateBullet(BULLET_TYPES["light"])
-    local x, y, angle = tank.weapon:tipPosition()
+    local bullet = CreateBullet(BULLET_TYPES["light"], myTank.id)
+    local x, y, angle = myTank.weapon:tipPosition()
     bullet:setPosition(x, y, angle)
-    table.insert(active_bullets, bullet)
+    table.insert(sprites[SPRITE_TYPES.BULLET], bullet)
 end
 
 
 function love.draw()
-    tank:draw()
 
-    for i, bullet in ipairs(active_bullets) do
+    for i, tank in ipairs(tankList) do
+        tank.hull:draw()
+    end
+
+    for i, tank in ipairs(tankList) do
+        tank.weapon:draw()
+    end
+
+    for i, bullet in ipairs(sprites[SPRITE_TYPES.BULLET]) do
         bullet:draw()
+    end
+
+    --todo: only in debug mode.
+    for i, tank in ipairs(tankList) do
+        tank.hull.hitbox:draw()
     end
 end
