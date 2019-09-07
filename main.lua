@@ -179,13 +179,7 @@ function CreateSprite(type, imagePath, rotationPointX, rotationPointY, hitboxInf
         end,
 
         offsetPosition = function(self, x, y, angle)
-            self._posX = self._posX + x
-            self._posY = self._posY + y
-            self._angle = self._angle + angle
-            if self.hitbox then
-                self.hitbox:moveTo(self._posX, self._posY)
-                self.hitbox:setRotation(-self._angle)
-            end
+            self:setPosition(self._posX+x, self._posY+y, self._angle+angle)
         end,
 
         getPosition = function(self)
