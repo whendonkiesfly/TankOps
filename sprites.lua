@@ -1,3 +1,5 @@
+socket = require "socket"  -- For gettime function.
+
 
 local imageCache = {}
 
@@ -58,7 +60,7 @@ WEAPON_INFO = {
 
 
 HULL_INFO = {
-    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 1----TODO: OFFSET OR SOMETHING? WHY ISN'T THIS ALIGNED?
+    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 1----TODO: NEED TO SUPPORT OFFSET.
     {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 2
     {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 3
     {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 4
@@ -180,6 +182,7 @@ function CreateTank(hullNum, weaponNum, colorLetter)
     tank.id = getNextID()
     tank.bulletType =  BULLET_TYPES["light"]
     tank.health = 100
+    tank.lastShotTime = 0
 
     function tank.setPosition(tank, hullX, hullY, hullAngle, weaponAngle)
         tank.hull:setPosition(hullX, hullY, hullAngle)
@@ -225,11 +228,18 @@ function CreateTank(hullNum, weaponNum, colorLetter)
         tank:offsetHealth(-bullet.bulletInfo.damage)---todo: need to give points to the shooter assuming it is from another team. note a kill as well.
     end
 
-    function tank.fire(tank)------TODO: RATE LIMIT.
-        local bullet = CreateBullet(tank.bulletType, myTank.id)
-        local x, y, angle = myTank.weapon:tipPosition()
-        bullet:setPosition(x, y, angle)
-        return bullet
+    function tank.fire(tank)
+        local currentTime = socket.gettime()
+        if currentTime >= tank.lastShotTime + (1/tank.bulletType.maxROF) then
+            tank.lastShotTime = currentTime
+            local bullet = CreateBullet(tank.bulletType, myTank.id)
+            local x, y, angle = myTank.weapon:tipPosition()
+            bullet:setPosition(x, y, angle)
+            return bullet
+        else
+            --Max ROF exceeded.
+            return nil
+        end
     end
 
     function tank.draw(tank)
