@@ -62,9 +62,10 @@ function love.update(dt)
 
 
     local mouseX, mouseY = love.mouse.getPosition()
+    local weaponX, weaponY, _ = myTank.weapon:getPosition()
 
-    local cursorDistanceX = mouseX - tankX
-    local cursorDistanceY = mouseY - tankY
+    local cursorDistanceX = mouseX - weaponX
+    local cursorDistanceY = mouseY - weaponY
     local cursorDistance = math.sqrt(cursorDistanceX^2 + cursorDistanceY^2)
     local weaponAngle = 0
     if cursorDistance ~= 0 then
