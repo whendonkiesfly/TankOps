@@ -1,4 +1,5 @@
 
+local imageCache = {}
 
 HULL_PNG_PATH = "assets/tanks/PNG/Hulls_Color_%s/Hull_%02d.png"
 WEAPON_PNG_PATH = "assets/tanks/PNG/Weapon_Color_%s/Gun_%02d.png"
@@ -6,14 +7,14 @@ BULLET_PNG_PATH = "assets/tanks/PNG/Effects/%s.png"
 
 
 BULLET_TYPES = {
-    granade = {name="Granade_Shell", width=20, height=20},
-    light = {name="Light_Shell", width=20, height=20},
-    medium = {name="Medium_Shell", width=20, height=20},
-    heavy = {name="Heavy_Shell", width=20, height=20},
-    laser = {name="Laser", width=20, height=20},
-    plasma = {name="Plasma", width=20, height=20},
-    shotgun = {name="Shotgun_Shells", width=20, height=20},
-    sniper = {name="Sniper_Shell", width=20, height=20},
+    granade = {name="Granade_Shell", width=20, height=20, damage=30, maxROF=3},----------TODO: IMPLEMENT DAMAGE AND ROF CAP.
+    light = {name="Light_Shell", width=20, height=20, damage=30, maxROF=3},
+    medium = {name="Medium_Shell", width=20, height=20, damage=30, maxROF=3},
+    heavy = {name="Heavy_Shell", width=20, height=20, damage=30, maxROF=3},
+    laser = {name="Laser", width=20, height=20, damage=30, maxROF=3},
+    plasma = {name="Plasma", width=20, height=20, damage=30, maxROF=3},
+    shotgun = {name="Shotgun_Shells", width=20, height=20, damage=30, maxROF=3},
+    sniper = {name="Sniper_Shell", width=20, height=20, damage=30, maxROF=3},
 }
 
 
@@ -96,6 +97,8 @@ function CreateTank(hullNum, weaponNum, colorLetter)
     tank.hull = CreateTankHull(hullNum, colorLetter)
     tank.weapon = CreateTankWeapon(hullNum, colorLetter)
     tank.id = getNextID()
+    tank.bulletType =  BULLET_TYPES["light"]
+    tank.health = 100
 
     function tank.setPosition(tank, hullX, hullY, hullAngle, weaponAngle)
         tank.hull:setPosition(hullX, hullY, hullAngle)
@@ -114,8 +117,16 @@ function CreateTank(hullNum, weaponNum, colorLetter)
     --     tank.weapon:offsetPosition(tankX, tankY, weaponAngle)
     -- end
 
-    function tank.fire(tank)
-        local bullet = CreateBullet(BULLET_TYPES["laser"], myTank.id)
+    function tank.offsetHealth(tank, offset)
+        tank.health = tank.health + offset
+    end
+
+    function tank.isAlive(tank)
+        return (tank.health > 0)
+    end
+
+    function tank.fire(tank)------TODO: RATE LIMIT.
+        local bullet = CreateBullet(tank.bulletType, myTank.id)
         local x, y, angle = myTank.weapon:tipPosition()
         bullet:setPosition(x, y, angle)
         return bullet
@@ -130,8 +141,16 @@ function CreateTank(hullNum, weaponNum, colorLetter)
 end
 
 
+
+
 function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffsetY, hitboxInfo)
-    local image=love.graphics.newImage(imagePath)-----TODO: CACHE THIS!
+    --Cache the sprite image.
+    if not imageCache[imagePath] then
+        imageCache[imagePath] = love.graphics.newImage(imagePath)
+    end
+
+    --Get sprite image from the cache.
+    local image = imageCache[imagePath]
 
     local rotationPointX = (image:getPixelWidth() / 2) + rotationPointOffsetX
     local rotationPointY = (image:getPixelHeight() / 2) + rotationPointOffsetY
