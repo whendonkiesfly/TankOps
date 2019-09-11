@@ -25,6 +25,7 @@ SPRITE_TYPES = {
     BULLET = "bullet",
     TANK_HULL = "hull",
     TANK_WEAPON = "weapon",
+    TANK = "tank",
 }
 
 
@@ -62,6 +63,29 @@ currentID = 0
 function getNextID()
     currentID = currentID + 1
     return currentID
+end
+
+
+function drawTanks()
+    for i, tank in pairs(sprites[SPRITE_TYPES.TANK]) do--todo: make function to draw tanks.
+        tank.hull:draw()
+    end
+
+    for i, tank in pairs(sprites[SPRITE_TYPES.TANK]) do
+        tank.weapon:draw()
+    end
+
+    --todo: only in debug mode.
+    for i, tank in pairs(sprites[SPRITE_TYPES.TANK]) do
+        tank.hull.hitbox:draw()
+    end
+end
+
+
+function drawBullets()
+    for id, bullet in pairs(sprites[SPRITE_TYPES.BULLET]) do
+        bullet:draw()
+    end
 end
 
 
@@ -119,10 +143,20 @@ function CreateTank(hullNum, weaponNum, colorLetter)
 
     function tank.offsetHealth(tank, offset)
         tank.health = tank.health + offset
+        --If this killed the tank, clean it up.
+        if not tank:isAlive() then
+            tank.hull:cleanup()
+            tank.weapon:cleanup()
+            sprites[SPRITE_TYPES.TANK][tank.id] = nil
+        end
     end
 
     function tank.isAlive(tank)
         return (tank.health > 0)
+    end
+
+    function tank.processBulletHit(tank, bullet)
+        tank:offsetHealth(-bullet.bulletInfo.damage)---todo: need to give points to the shooter assuming it is from another team. note a kill as well.
     end
 
     function tank.fire(tank)------TODO: RATE LIMIT.
@@ -136,6 +170,8 @@ function CreateTank(hullNum, weaponNum, colorLetter)
         tank.hull:draw()
         tank.weapon:draw()
     end
+
+    sprites[SPRITE_TYPES.TANK][tank.id] = tank
 
     return tank
 end
@@ -199,6 +235,11 @@ function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffset
             self:setPosition(self._posX+dx, self._posY+dy, self._angle+angle)
         end,
 
+        cleanup = function(self)
+            --Remove this sprite from the table of sprites.
+            sprites[type][id] = nil
+        end,
+
         getPosition = function(self)
             return self._posX, self._posY, self._angle
         end,
@@ -217,6 +258,7 @@ function CreateBullet(bulletInfo, ownerID)
     local imagePath = string.format(BULLET_PNG_PATH, bulletInfo.name)
     local sprite = CreateSprite(SPRITE_TYPES.BULLET, imagePath, 0, 0, bulletInfo)
     sprite.speed = 440---TODO: GET THIS FROM A TABLE OR SOMETHING.
+    sprite.bulletInfo = bulletInfo
     function sprite.processMovement(bullet, dt)  -- TODO: ABSTRACT THIS TO PROJECTILE MAYBE
         local x, y, angle = bullet:getPosition()
         x = x - math.sin(angle) * sprite.speed * dt

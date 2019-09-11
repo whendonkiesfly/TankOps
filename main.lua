@@ -1,7 +1,13 @@
 HC = require 'HC'
 
 
-
+--------todo: make tank controller structure for controlling the tank.
+-----log hits and kills to players.
+----make walls and barricades.
+---command line arguments to set game up.
+----figure out how to shrink sprites maybe.
+--clean code up with libraries.
+--make basic AI.
 
 
 
@@ -14,8 +20,8 @@ function love.load(args)
     myTank = CreateTank(1, 1, "A")
     myTank:setPosition(200, 200, 0, 0)
 
-    tankList = {myTank, CreateTank(2, 2, "B")}----TODO: DON'T USE TANKLIST. USE THE SPRITE LIST.
-    tankList[2]:setPosition(400, 400, 0, 0)
+    otherTank = CreateTank(2, 2, "B")
+    otherTank:setPosition(400, 400, 0, 0)
 end
 
 function love.update(dt)
@@ -44,7 +50,7 @@ function love.update(dt)
     myTank.hull:offsetPosition(xOffset, yOffset, angleOffset)
 
     --Make sure this didn't cause collisions.
-    for i, otherTank in pairs(tankList) do
+    for i, otherTank in pairs(sprites[SPRITE_TYPES.TANK]) do
         if myTank.hull.hitbox:collidesWith(otherTank.hull.hitbox) then
             myTank.hull:setPosition(currentX, currentY, currentAngle)
             break
@@ -79,10 +85,10 @@ function love.update(dt)
 
     ---TODO: IF THIS IS SLOW, LOOK INTO SPACIAL HASH IN HC LIBRARY.
     for i, bullet in pairs(sprites[SPRITE_TYPES.BULLET]) do
-        for j, tank in ipairs(tankList) do
+        for j, tank in pairs(sprites[SPRITE_TYPES.TANK]) do
             if bullet.ownerID ~= tank.id then
                 if bullet.hitbox:collidesWith(tank.hull.hitbox) then
-                    print("hit!")
+                    tank:processBulletHit(bullet)
                     sprites[SPRITE_TYPES.BULLET][bullet.id] = nil
                 end
             end
@@ -97,21 +103,9 @@ end
 
 
 function love.draw()
+    drawTanks()
 
-    for i, tank in ipairs(tankList) do
-        tank.hull:draw()
-    end
+    drawBullets()
 
-    for i, tank in ipairs(tankList) do
-        tank.weapon:draw()
-    end
 
-    for id, bullet in pairs(sprites[SPRITE_TYPES.BULLET]) do
-        bullet:draw()
-    end
-
-    --todo: only in debug mode.
-    for i, tank in ipairs(tankList) do
-        tank.hull.hitbox:draw()
-    end
 end
