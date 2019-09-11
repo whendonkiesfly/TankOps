@@ -1,6 +1,5 @@
 HC = require 'HC'
 
-
 --------todo: make tank controller structure for controlling the tank.
 -----log hits and kills to players.
 ----make walls and barricades.
@@ -90,11 +89,13 @@ function love.update(dt)
             if bullet.ownerID ~= tank.id then
                 if bullet.hitbox:collidesWith(tank.hull.hitbox) then
                     tank:processBulletHit(bullet)
-                    sprites[SPRITE_TYPES.BULLET][bullet.id] = nil
                 end
             end
         end
     end
+
+
+    cleanupSprites()
 
 end
 

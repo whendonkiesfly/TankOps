@@ -29,6 +29,8 @@ SPRITE_TYPES = {
 }
 
 
+
+
 for _, type in pairs(SPRITE_TYPES) do
     sprites[type] = {}
 end
@@ -57,6 +59,29 @@ HULL_INFO = {
     {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 7
     {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 8
 }
+
+
+--Stores info about all sprites to be removed.
+local cleanupList = {}
+
+
+function pushCleanupListItem(type, id)
+    spriteInfo = {
+        type = type,
+        id = id
+    }
+    cleanupList[#cleanupList+1] = spriteInfo
+end
+
+
+function cleanupSprites()
+    for i, spriteInfo in pairs(cleanupList) do
+        sprites[spriteInfo.type][spriteInfo.id] = nil
+    end
+end
+
+
+
 
 
 currentID = 0
@@ -142,13 +167,21 @@ function CreateTank(hullNum, weaponNum, colorLetter)
     -- end
 
     function tank.offsetHealth(tank, offset)
-        tank.health = tank.health + offset
-        --If this killed the tank, clean it up.
-        if not tank:isAlive() then
-            tank.hull:cleanup()
-            tank.weapon:cleanup()
-            sprites[SPRITE_TYPES.TANK][tank.id] = nil
+        if tank:isAlive() then
+            tank.health = tank.health + offset
+
+            --If this killed the tank, clean it up.
+            if not tank:isAlive() then
+                tank:markForDeletion()
+            end
         end
+    end
+
+    function tank.markForDeletion(tank)
+        tank.hull:markForDeletion()
+        tank.weapon:markForDeletion()
+        pushCleanupListItem(SPRITE_TYPES.TANK, tank.id)
+
     end
 
     function tank.isAlive(tank)
@@ -156,6 +189,7 @@ function CreateTank(hullNum, weaponNum, colorLetter)
     end
 
     function tank.processBulletHit(tank, bullet)
+        bullet:markForDeletion()
         tank:offsetHealth(-bullet.bulletInfo.damage)---todo: need to give points to the shooter assuming it is from another team. note a kill as well.
     end
 
@@ -235,9 +269,8 @@ function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffset
             self:setPosition(self._posX+dx, self._posY+dy, self._angle+angle)
         end,
 
-        cleanup = function(self)
-            --Remove this sprite from the table of sprites.
-            sprites[type][id] = nil
+        markForDeletion = function(self)
+            pushCleanupListItem(self.type, self.id)
         end,
 
         getPosition = function(self)
@@ -250,6 +283,8 @@ function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffset
 
     return sprite
 end
+
+
 
 
 --Pass in one of the values from the BULLET_TYPES table.
