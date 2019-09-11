@@ -18,6 +18,13 @@ BULLET_TYPES = {
 }
 
 
+BUILDING_TYPES = {
+    --https://opengameart.org/content/small-irregular-light-red-brick-wall-256px --- TODO: LICENSE
+    RED_BRICK_WALL = {path="04pietrac3.png", width=256, height=256},
+}
+
+
+
 sprites = {}
 
 
@@ -26,6 +33,7 @@ SPRITE_TYPES = {
     TANK_HULL = "hull",
     TANK_WEAPON = "weapon",
     TANK = "tank",
+    STRUCTURE = "building",
 }
 
 
@@ -50,14 +58,14 @@ WEAPON_INFO = {
 
 
 HULL_INFO = {
-    {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 1----TODO: OFFSET OR SOMETHING? WHY ISN'T THIS ALIGNED?
-    {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 2
-    {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 3
-    {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 4
-    {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 5
-    {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 6
-    {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 7
-    {width=300, height=450, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 8
+    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 1----TODO: OFFSET OR SOMETHING? WHY ISN'T THIS ALIGNED?
+    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 2
+    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 3
+    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 4
+    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 5
+    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 6
+    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 7
+    {width=150, height=256, weaponOffsetX=0, weaponOffsetY=40},  -- Hull 8
 }
 
 
@@ -78,6 +86,8 @@ function cleanupSprites()
     for i, spriteInfo in pairs(cleanupList) do
         sprites[spriteInfo.type][spriteInfo.id] = nil
     end
+
+    cleanupList = {}  -- empty the cleanup list since we already cleaned them up.
 end
 
 
@@ -110,7 +120,29 @@ end
 function drawBullets()
     for id, bullet in pairs(sprites[SPRITE_TYPES.BULLET]) do
         bullet:draw()
+        bullet.hitbox:draw()  -- TODO: ONLY DO THIS IN DEBUG MODE.
     end
+end
+
+function drawStructures()
+    for id, structure in pairs(sprites[SPRITE_TYPES.STRUCTURE]) do
+        structure:draw()
+        structure.hitbox:draw()
+    end
+end
+
+
+function CreateStructure(structureInfo)
+    local imagePath = string.format("assets/%s", structureInfo.path)
+    local structure = CreateSprite(SPRITE_TYPES.STRUCTURE, imagePath, 0, 0, structureInfo)
+    structure.structureInfo = structureInfo
+
+    function structure.processBulletHit(structure, bullet)
+        bullet:markForDeletion()
+    end
+
+
+    return structure
 end
 
 
@@ -232,7 +264,7 @@ function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffset
     if hitboxInfo then
         local halfWidth = hitboxInfo.width / 2
         local halfHeight = hitboxInfo.height / 2
-        hitbox = HC.rectangle(posX - halfWidth, posY - halfHeight, posX + halfWidth, posY + halfHeight)
+        hitbox = HC.rectangle(posX - halfWidth, posY - halfHeight, hitboxInfo.width, hitboxInfo.height)
     end
 
     id = getNextID()

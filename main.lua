@@ -7,7 +7,7 @@ HC = require 'HC'
 ----figure out how to shrink sprites maybe.
 --clean code up with libraries.
 --make basic AI.
-
+--todo: building art: https://opengameart.org/content/building-animation-from-c42
 
 
 function love.load(args)
@@ -21,6 +21,9 @@ function love.load(args)
 
     otherTank = CreateTank(2, 2, "B")
     otherTank:setPosition(400, 400, 0, 0)
+
+    bunker = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL)
+    bunker:setPosition(600, 600, 0)
 end
 
 function love.update(dt)
@@ -55,6 +58,13 @@ function love.update(dt)
             break
         end
     end
+    for i, structure in pairs(sprites[SPRITE_TYPES.STRUCTURE]) do
+        if myTank.hull.hitbox:collidesWith(structure.hitbox) then
+            myTank.hull:setPosition(currentX, currentY, currentAngle)
+            break
+        end
+    end
+
 
 
 
@@ -85,11 +95,21 @@ function love.update(dt)
 
     ---TODO: IF THIS IS SLOW, LOOK INTO SPACIAL HASH IN HC LIBRARY.
     for i, bullet in pairs(sprites[SPRITE_TYPES.BULLET]) do
+
+        --Check for tank collisions.
         for j, tank in pairs(sprites[SPRITE_TYPES.TANK]) do
             if bullet.ownerID ~= tank.id then
                 if bullet.hitbox:collidesWith(tank.hull.hitbox) then
                     tank:processBulletHit(bullet)
                 end
+            end
+        end
+
+
+        --Check for structure collisions.
+        for j, structure in pairs(sprites[SPRITE_TYPES.STRUCTURE]) do
+            if bullet.hitbox:collidesWith(structure.hitbox) then
+                structure:processBulletHit(bullet)
             end
         end
     end
@@ -105,6 +125,7 @@ end
 
 
 function love.draw()
+    drawStructures()
     drawTanks()
     drawBullets()
 end
