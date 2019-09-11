@@ -62,7 +62,7 @@ function love.update(dt)
 
 
     local mouseX, mouseY = love.mouse.getPosition()
-    local weaponX, weaponY, _ = myTank.weapon:getPosition()
+    local weaponX, weaponY, _ = myTank.weapon:getPosition()  -- Note that this isn't perfect because the weapon position has not yet been updated.
 
     local cursorDistanceX = mouseX - weaponX
     local cursorDistanceY = mouseY - weaponY
