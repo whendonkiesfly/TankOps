@@ -92,10 +92,7 @@ function love.update(dt)
 end
 
 function love.mousepressed( x, y, button, istouch, presses )
-    local bullet = CreateBullet(BULLET_TYPES["laser"], myTank.id)
-    local x, y, angle = myTank.weapon:tipPosition()
-    bullet:setPosition(x, y, angle)
-    -- sprites[SPRITE_TYPES.BULLET][bullet.id] = bullet
+    myTank:fire()
 end
 
 

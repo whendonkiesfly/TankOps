@@ -114,6 +114,13 @@ function CreateTank(hullNum, weaponNum, colorLetter)
     --     tank.weapon:offsetPosition(tankX, tankY, weaponAngle)
     -- end
 
+    function tank.fire(tank)
+        local bullet = CreateBullet(BULLET_TYPES["laser"], myTank.id)
+        local x, y, angle = myTank.weapon:tipPosition()
+        bullet:setPosition(x, y, angle)
+        return bullet
+    end
+
     function tank.draw(tank)
         tank.hull:draw()
         tank.weapon:draw()
