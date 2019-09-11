@@ -1,8 +1,8 @@
 HC = require 'HC'
 
+----make walls and barricades.
 --------todo: make tank controller structure for controlling the tank.
 -----log hits and kills to players.
-----make walls and barricades.
 ---command line arguments to set game up.
 ----figure out how to shrink sprites maybe.
 --clean code up with libraries.
@@ -106,8 +106,5 @@ end
 
 function love.draw()
     drawTanks()
-
     drawBullets()
-
-
 end

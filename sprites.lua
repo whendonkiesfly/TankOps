@@ -7,14 +7,14 @@ BULLET_PNG_PATH = "assets/tanks/PNG/Effects/%s.png"
 
 
 BULLET_TYPES = {
-    granade = {name="Granade_Shell", width=20, height=20, damage=30, maxROF=3},----------TODO: IMPLEMENT DAMAGE AND ROF CAP.
-    light = {name="Light_Shell", width=20, height=20, damage=30, maxROF=3},
-    medium = {name="Medium_Shell", width=20, height=20, damage=30, maxROF=3},
-    heavy = {name="Heavy_Shell", width=20, height=20, damage=30, maxROF=3},
-    laser = {name="Laser", width=20, height=20, damage=30, maxROF=3},
-    plasma = {name="Plasma", width=20, height=20, damage=30, maxROF=3},
-    shotgun = {name="Shotgun_Shells", width=20, height=20, damage=30, maxROF=3},
-    sniper = {name="Sniper_Shell", width=20, height=20, damage=30, maxROF=3},
+    granade = {name="Granade_Shell", width=20, height=20, damage=30, maxROF=3, speed=440},----------TODO: IMPLEMENT DAMAGE AND ROF CAP.
+    light = {name="Light_Shell", width=20, height=20, damage=30, maxROF=3, speed=440},
+    medium = {name="Medium_Shell", width=20, height=20, damage=30, maxROF=3, speed=440},
+    heavy = {name="Heavy_Shell", width=20, height=20, damage=30, maxROF=3, speed=440},
+    laser = {name="Laser", width=20, height=20, damage=30, maxROF=3, speed=440},
+    plasma = {name="Plasma", width=20, height=20, damage=30, maxROF=3, speed=440},
+    shotgun = {name="Shotgun_Shells", width=20, height=20, damage=30, maxROF=3, speed=440},
+    sniper = {name="Sniper_Shell", width=20, height=20, damage=30, maxROF=3, speed=440},
 }
 
 
@@ -288,16 +288,14 @@ end
 
 
 --Pass in one of the values from the BULLET_TYPES table.
---todo: add bullet to bullet table here.
 function CreateBullet(bulletInfo, ownerID)
     local imagePath = string.format(BULLET_PNG_PATH, bulletInfo.name)
     local sprite = CreateSprite(SPRITE_TYPES.BULLET, imagePath, 0, 0, bulletInfo)
-    sprite.speed = 440---TODO: GET THIS FROM A TABLE OR SOMETHING.
     sprite.bulletInfo = bulletInfo
-    function sprite.processMovement(bullet, dt)  -- TODO: ABSTRACT THIS TO PROJECTILE MAYBE
+    function sprite.processMovement(bullet, dt)
         local x, y, angle = bullet:getPosition()
-        x = x - math.sin(angle) * sprite.speed * dt
-        y = y - math.cos(angle) * sprite.speed * dt
+        x = x - math.sin(angle) * sprite.bulletInfo.speed * dt
+        y = y - math.cos(angle) * sprite.bulletInfo.speed * dt
         bullet:setPosition(x, y, angle)
     end
 
