@@ -96,7 +96,7 @@ end
 
 
 
-currentID = 0
+local currentID = 0
 function getNextID()
     currentID = currentID + 1
     return currentID
@@ -134,17 +134,55 @@ function drawStructures()
 end
 
 
-function CreateStructure(structureInfo)
-    local imagePath = string.format("assets/%s", structureInfo.path)
-    local structure = CreateSprite(SPRITE_TYPES.STRUCTURE, imagePath, 0, 0, structureInfo)
-    structure.structureInfo = structureInfo
+--Creates a structure and allows for repeating for wall creation.
+--structureCount, repeatAngle, and imageAngle are optional. If none of these are specified,
+--Only a single structure will be made. xPos and yPos make up the coordinate of the center
+--of the first structure object.
+--todo: maybe make this work more like other sprites so they can be moved.
+function CreateStructure(structureInfo, xPos, yPos, structureCount, repeatAngle, imageAngle)
 
-    function structure.processBulletHit(structure, bullet)
+    if imageAngle == nil then imageAngle = 0 end
+    if structureCount == nil then structureCount = 1 end
+    if repeatAngle == nil then repeatAngle = 0 end
+    assert(structureCount > 0, "structureCount must be a positive number!")
+
+    local imagePath = string.format("assets/%s", structureInfo.path)
+    local wall = {}
+
+    wall.structureInfo = structureInfo
+    wall.id = getNextID()
+
+    --Create a hitbox that is the space where the wall would be with a 0 radian rotation then rotate it.
+    local hitboxX = xPos - structureInfo.width / 2
+    local hitboxY = yPos + structureInfo.height / 2
+    local hitboxHeight = structureCount * structureInfo.height
+    local hitboxWidth = structureInfo.width
+    wall.hitbox = HC.rectangle(hitboxX, hitboxY, hitboxWidth, -hitboxHeight)
+    wall.hitbox:setRotation(-repeatAngle, xPos, yPos)
+
+    --Create all sprites.
+    wall.structures = {}
+    for i = 1, structureCount, 1 do
+        local structure = CreateSprite(SPRITE_TYPES.STRUCTURE, imagePath, 0, 0, nil, true)
+        local xVal = xPos - (structureInfo.width * (i - 1) * math.sin(repeatAngle))
+        local yVal = yPos - (structureInfo.width * (i - 1) * math.cos(repeatAngle))
+        structure:setPosition(xVal, yVal, imageAngle+repeatAngle)
+        wall.structures[i] = structure
+    end
+
+    function wall.processBulletHit(wall, bullet)
         bullet:markForDeletion()
     end
 
+    function wall.draw(wall)
+        for i, structure in ipairs(wall.structures) do
+            structure:draw()
+        end
+    end
 
-    return structure
+    sprites[SPRITE_TYPES.STRUCTURE][wall.id] = wall
+
+    return wall
 end
 
 
@@ -254,11 +292,14 @@ end
 
 
 
-
-function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffsetY, hitboxInfo)
+function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffsetY, hitboxInfo, disableManagment)
     --Cache the sprite image.
     if not imageCache[imagePath] then
         imageCache[imagePath] = love.graphics.newImage(imagePath)
+    end
+
+    if disableManagment == nil then
+        disableManagment = false
     end
 
     --Get sprite image from the cache.
@@ -289,6 +330,7 @@ function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffset
         _angle = 0,
         hitbox = hitbox,
         type = type,
+        disableManagment = disableManagment,
 
         draw = function(self)
             love.graphics.draw(self._image, self._posX, self._posY, -self._angle, 1, 1, self._rotatePointX, self._rotatePointY)
@@ -312,7 +354,9 @@ function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffset
         end,
 
         markForDeletion = function(self)
-            pushCleanupListItem(self.type, self.id)
+            if not self.disableManagment then
+                pushCleanupListItem(self.type, self.id)
+            end
         end,
 
         getPosition = function(self)
@@ -321,7 +365,9 @@ function CreateSprite(type, imagePath, rotationPointOffsetX, rotationPointOffset
     }
 
     --Keep track of this sprite.
-    sprites[type][id] = sprite
+    if not disableManagment then
+        sprites[type][id] = sprite
+    end
 
     return sprite
 end

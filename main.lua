@@ -1,14 +1,5 @@
 HC = require 'HC'
 
-----make walls and barricades.
---------todo: make tank controller structure for controlling the tank.
------log hits and kills to players.
----command line arguments to set game up.
-----figure out how to shrink sprites maybe.
---clean code up with libraries.
---make basic AI.
---todo: building art: https://opengameart.org/content/building-animation-from-c42
-
 
 function love.load(args)
     --todo: turn this into a library.
@@ -19,11 +10,16 @@ function love.load(args)
     myTank = CreateTank(1, 1, "A")
     myTank:setPosition(200, 200, 0, 0)
 
-    otherTank = CreateTank(2, 2, "B")
-    otherTank:setPosition(400, 400, 0, 0)
+    -- otherTank = CreateTank(2, 2, "B")
+    -- otherTank:setPosition(400, 400, 0, 0)
 
-    bunker = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL)
-    bunker:setPosition(600, 600, 0)
+    -- bunker = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL)
+    -- bunker:setPosition(600, 600, 0)
+
+    local imageAngle = 0
+    local structureCount = 1
+    local repeatAngle = math.pi/8
+    wall = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL, 400, 500, structureCount, repeatAngle, imageAngle)
 end
 
 function love.update(dt)
