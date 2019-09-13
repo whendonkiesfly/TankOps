@@ -1,11 +1,25 @@
 HC = require 'HC'
 
+local DEFAULT_RESOLUTION = {800, 600}
+
+
+function love.resize(w, h)
+  print(("Window resized to width: %d and height: %d."):format(w, h))
+end
 
 function love.load(args)
+
+
+
+    local modeFlags = {
+        resizable = true,
+    }
+
+    success = love.window.setMode(DEFAULT_RESOLUTION[1], DEFAULT_RESOLUTION[2], modeFlags)
+    assert(success == true, "Failed to set window mode")
+
     --todo: turn this into a library.
     love.filesystem.load("sprites.lua")()
-
-
 
     myTank = CreateTank(1, 1, "A")
     myTank:setPosition(200, 200, 0, 0)
