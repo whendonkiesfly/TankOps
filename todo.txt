@@ -1,8 +1,6 @@
 --------todo: make tank controller structure for controlling the tank.
 -----log hits and kills to players.
 ---command line arguments to set game up.
-----figure out how to shrink sprites maybe.
---clean code up with libraries.
 --make basic AI.
 
 
@@ -11,4 +9,4 @@ allow bullets to reflect off of walls and maybe other bullets
 Make bullets take damage from other bullets which reduces their own damage.
 make weapons different. associate different tank types with different weapons.
 make different game modes.
---todo: building art: https://opengameart.org/content/building-animation-from-c42
+building art: https://opengameart.org/content/building-animation-from-c42
