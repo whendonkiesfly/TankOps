@@ -4,7 +4,7 @@ tankLib = require "tank"
 structureLib = require "structure"
 bulletLib = require "bullet"
 
-local DEFAULT_RESOLUTION = {800, 600}
+local DEFAULT_RESOLUTION = {width=1280, height=1024}
 
 
 function love.resize(w, h)
@@ -19,7 +19,7 @@ function love.load(args)
         resizable = true,
     }
 
-    success = love.window.setMode(DEFAULT_RESOLUTION[1], DEFAULT_RESOLUTION[2], modeFlags)
+    success = love.window.setMode(DEFAULT_RESOLUTION.width, DEFAULT_RESOLUTION.height, modeFlags)
     assert(success == true, "Failed to set window mode")
 
     myTank = tankLib.CreateTank(1, 1, "A")
@@ -30,6 +30,22 @@ function love.load(args)
 
     -- bunker = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL)
     -- bunker:setPosition(600, 600, 0)
+
+
+
+    --Build the map. TODO: MAKE A FUNCTION TO MAKE MAP BOUNDS.
+    local wallWidth = math.ceil(DEFAULT_RESOLUTION.width / structureLib.BUILDING_TYPES.RED_BRICK_WALL.width)+1
+    local wallHeight = math.ceil(DEFAULT_RESOLUTION.width / structureLib.BUILDING_TYPES.RED_BRICK_WALL.height)+1
+    local widthOffset = math.ceil(structureLib.BUILDING_TYPES.RED_BRICK_WALL.width / 2)
+    local heightOffset = math.ceil(structureLib.BUILDING_TYPES.RED_BRICK_WALL.height / 2)
+    --Top horizontal wall
+    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, -widthOffset, -heightOffset, wallWidth, -math.pi/2, 0)
+    --Lower horizontal wall
+    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, -widthOffset, DEFAULT_RESOLUTION.height+heightOffset, wallWidth, -math.pi/2, 0)
+    --Left vertical wall
+    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, -widthOffset, DEFAULT_RESOLUTION.height+heightOffset, wallHeight, 0, 0)
+    --Right vertical wall
+    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, DEFAULT_RESOLUTION.width+widthOffset, DEFAULT_RESOLUTION.height+heightOffset, wallHeight, 0, 0)
 
 
 
