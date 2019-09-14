@@ -1,4 +1,8 @@
 HC = require 'HC'
+spriteLib = require "sprite"
+tankLib = require "tank"
+structureLib = require "structure"
+bulletLib = require "bullet"
 
 local DEFAULT_RESOLUTION = {800, 600}
 
@@ -18,13 +22,10 @@ function love.load(args)
     success = love.window.setMode(DEFAULT_RESOLUTION[1], DEFAULT_RESOLUTION[2], modeFlags)
     assert(success == true, "Failed to set window mode")
 
-    --todo: turn this into a library.
-    love.filesystem.load("sprites.lua")()
-
-    myTank = CreateTank(1, 1, "A")
+    myTank = tankLib.CreateTank(1, 1, "A")
     myTank:setPosition(200, 200, 0, 0)
 
-    -- otherTank = CreateTank(2, 2, "B")
+    -- otherTank = tankLib.CreateTank(2, 2, "B")
     -- otherTank:setPosition(400, 400, 0, 0)
 
     -- bunker = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL)
@@ -33,7 +34,7 @@ function love.load(args)
     local imageAngle = 0
     local structureCount = 1
     local repeatAngle = math.pi/8
-    wall = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL, 400, 500, structureCount, repeatAngle, imageAngle)
+    wall = structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, 400, 500, structureCount, repeatAngle, imageAngle)
 end
 
 function love.update(dt)
@@ -62,13 +63,13 @@ function love.update(dt)
     myTank.hull:offsetPosition(xOffset, yOffset, angleOffset)
 
     --Make sure this didn't cause collisions.
-    for i, otherTank in pairs(sprites[SPRITE_TYPES.TANK]) do
+    for i, otherTank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
         if myTank.hull.hitbox:collidesWith(otherTank.hull.hitbox) then
             myTank.hull:setPosition(currentX, currentY, currentAngle)
             break
         end
     end
-    for i, structure in pairs(sprites[SPRITE_TYPES.STRUCTURE]) do
+    for i, structure in pairs(spriteLib.getSprites(structureLib.SPRITE_TYPE_STRUCTURE)) do
         if myTank.hull.hitbox:collidesWith(structure.hitbox) then
             myTank.hull:setPosition(currentX, currentY, currentAngle)
             break
@@ -97,17 +98,16 @@ function love.update(dt)
     myTank:setWeaponAngle(weaponAngle)
 
 
-
-    for i, bullet in pairs(sprites[SPRITE_TYPES.BULLET]) do
+    for i, bullet in pairs(spriteLib.getSprites(bulletLib.SPRITE_TYPE_BULLET)) do
         bullet:processMovement(dt)
     end
 
 
     ---TODO: IF THIS IS SLOW, LOOK INTO SPACIAL HASH IN HC LIBRARY.
-    for i, bullet in pairs(sprites[SPRITE_TYPES.BULLET]) do
+    for i, bullet in pairs(spriteLib.getSprites(bulletLib.SPRITE_TYPE_BULLET)) do
 
         --Check for tank collisions.
-        for j, tank in pairs(sprites[SPRITE_TYPES.TANK]) do
+        for j, tank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
             if bullet.ownerID ~= tank.id then
                 if bullet.hitbox:collidesWith(tank.hull.hitbox) then
                     tank:processBulletHit(bullet)
@@ -117,7 +117,7 @@ function love.update(dt)
 
 
         --Check for structure collisions.
-        for j, structure in pairs(sprites[SPRITE_TYPES.STRUCTURE]) do
+        for j, structure in pairs(spriteLib.getSprites(structureLib.SPRITE_TYPE_STRUCTURE)) do
             if bullet.hitbox:collidesWith(structure.hitbox) then
                 structure:processBulletHit(bullet)
             end
@@ -125,7 +125,8 @@ function love.update(dt)
     end
 
 
-    cleanupSprites()
+
+    spriteLib.cleanupSprites()
 
 end
 
@@ -135,7 +136,7 @@ end
 
 
 function love.draw()
-    drawStructures()
-    drawTanks()
-    drawBullets()
+    structureLib.drawStructures()
+    tankLib.drawTanks()
+    bulletLib.drawBullets()
 end
