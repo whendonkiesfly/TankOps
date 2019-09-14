@@ -1,5 +1,6 @@
 spriteLib = require "sprite"
 bulletLib = require "bullet"
+loggerLib = require "gameLogger"
 
 local library = {}
 
@@ -111,18 +112,13 @@ function library.CreateTank(hullNum, weaponNum, colorLetter)
     function tank.offsetHealth(tank, offset)
         if tank:isAlive() then
             tank.health = tank.health + offset
-
-            --If this killed the tank, clean it up.
-            if not tank:isAlive() then
-                tank:markForDeletion()
-            end
         end
     end
 
     function tank.markForDeletion(tank)
         tank.hull:markForDeletion()
         tank.weapon:markForDeletion()
-        flagSpriteForDeletion(SPRITE_TYPES.TANK, tank.id)
+        spriteLib.flagSpriteForDeletion(library.SPRITE_TYPE_TANK, tank.id)
 
     end
 
@@ -131,17 +127,35 @@ function library.CreateTank(hullNum, weaponNum, colorLetter)
     end
 
     function tank.processBulletHit(tank, bullet)
+        loggerLib.logBulletHit(bullet.ownerID, tank.id)
         bullet:markForDeletion()
-        tank:offsetHealth(-bullet.bulletInfo.damage)---todo: need to give points to the shooter assuming it is from another team. note a kill as well.
+        tank:offsetHealth(-bullet.bulletInfo.damage)
+
+        --If this killed the tank, clean it up.
+        if not tank:isAlive() then
+            tank:markForDeletion()
+            --log the kill.
+            loggerLib.logKill(bullet.ownerID, tank.id)
+        end
+
     end
+
+    function tank.readyToFire(tank, currentTime)
+        if currentTime == nil then
+            currentTime = socket.gettime()
+        end
+        return (currentTime >= tank.lastShotTime + (1/tank.bulletType.maxROF))
+    end
+
 
     function tank.fire(tank)
         local currentTime = socket.gettime()
-        if currentTime >= tank.lastShotTime + (1/tank.bulletType.maxROF) then
+        if tank:readyToFire(currentTime) then
             tank.lastShotTime = currentTime
             local bullet = bulletLib.CreateBullet(tank.bulletType, myTank.id)
             local x, y, angle = myTank.weapon:tipPosition()
             bullet:setPosition(x, y, angle)
+            loggerLib.logShotFired(tank.id)
             return bullet
         else
             --Max ROF exceeded.

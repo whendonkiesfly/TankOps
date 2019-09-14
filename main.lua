@@ -25,16 +25,18 @@ function love.load(args)
     myTank = tankLib.CreateTank(1, 1, "A")
     myTank:setPosition(200, 200, 0, 0)
 
-    -- otherTank = tankLib.CreateTank(2, 2, "B")
-    -- otherTank:setPosition(400, 400, 0, 0)
+    otherTank = tankLib.CreateTank(2, 2, "B")
+    otherTank:setPosition(400, 400, 0, 0)
 
     -- bunker = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL)
     -- bunker:setPosition(600, 600, 0)
 
-    local imageAngle = 0
-    local structureCount = 1
-    local repeatAngle = math.pi/8
-    wall = structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, 400, 500, structureCount, repeatAngle, imageAngle)
+
+
+    -- local imageAngle = 0
+    -- local structureCount = 1
+    -- local repeatAngle = math.pi/8
+    -- wall = structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, 400, 500, structureCount, repeatAngle, imageAngle)
 end
 
 function love.update(dt)
@@ -128,6 +130,11 @@ function love.update(dt)
 
     spriteLib.cleanupSprites()
 
+    if checkGameOver() then
+        print("game over!")
+        love.event.quit()
+    end
+
 end
 
 function love.mousepressed( x, y, button, istouch, presses )
@@ -139,4 +146,17 @@ function love.draw()
     structureLib.drawStructures()
     tankLib.drawTanks()
     bulletLib.drawBullets()
+end
+
+
+
+function checkGameOver()
+    --todo: make this fancier. right now it just waits until only one tank is left.
+    count = 0
+    for i, k in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do count = count + 1 end
+    if count < 2 then
+        return true
+    else
+        return false
+    end
 end
