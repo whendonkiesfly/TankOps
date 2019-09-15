@@ -13,14 +13,8 @@ end
 
 function love.load(args)
 
+    setupWindow()
 
-
-    local modeFlags = {
-        resizable = true,
-    }
-
-    success = love.window.setMode(DEFAULT_RESOLUTION.width, DEFAULT_RESOLUTION.height, modeFlags)
-    assert(success == true, "Failed to set window mode")
 
     myTank = tankLib.CreateTank(1, 1, "A")
     myTank:setPosition(200, 200, 0, 0)
@@ -165,6 +159,14 @@ function love.draw()
 end
 
 
+function setupWindow()
+    local modeFlags = {
+        resizable = true,
+    }
+
+    success = love.window.setMode(DEFAULT_RESOLUTION.width, DEFAULT_RESOLUTION.height, modeFlags)
+    assert(success == true, "Failed to set window mode")
+end
 
 function checkGameOver()
     --todo: make this fancier. right now it just waits until only one tank is left.
