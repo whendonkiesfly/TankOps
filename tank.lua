@@ -103,6 +103,45 @@ function library.CreateTank(hullNum, weaponNum, colorLetter)
         y = y + math.sin(hullAngle) * HULL_INFO[tank.hull.hullNum].weaponOffsetX + math.cos(hullAngle) * HULL_INFO[tank.hull.hullNum].weaponOffsetY
         tank.weapon:setPosition(x, y, angle)
     end
+
+
+
+
+
+
+    function tank.aimAt(tank, targetX, targetY)
+
+        local weaponX, weaponY, _ = tank.weapon:getPosition()  -- Note that this isn't perfect because the weapon position has not yet been updated.
+
+        local cursorDistanceX = targetX - weaponX
+        local cursorDistanceY = targetY - weaponY
+        local cursorDistance = math.sqrt(cursorDistanceX^2 + cursorDistanceY^2)
+        local weaponAngle = 0
+        if cursorDistance ~= 0 then
+            weaponAngle = math.asin(cursorDistanceX / cursorDistance) - math.pi
+            if cursorDistanceY < 0 then
+                weaponAngle = math.pi - weaponAngle
+            end
+        end
+
+        tank:setWeaponAngle(weaponAngle)
+
+    end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     --
     -- function tank.offsetPosition(tank, hullX, hullY, hullAngle, weaponAngle)
     --     tank.hull:offsetPosition(hullX, hullY, hullAngle)

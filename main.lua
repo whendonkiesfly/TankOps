@@ -79,42 +79,25 @@ function love.update(dt)
 
     --Process all tank commands.
     for id, command in pairs(commands) do
+        local tank = spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)[id]
+
+        ---todo: move tank!
+
+        tank:aimAt(command.target.x, command.target.y)
 
     end
-        -- local tankX, tankY, angle = myTank.hull:getPosition()
+
+
+
+
+        -- local tankX, tankY, angle = tank.hull:getPosition()
         -- angle = angle + angleOffset * dt
         -- local xOffset = math.sin(angle) * hullSpeedValue * dt
         -- local yOffset = math.cos(angle) * hullSpeedValue * dt
         --
-        -- local currentX, currentY, currentAngle = myTank.hull:getPosition()
+        -- local currentX, currentY, currentAngle = tank.hull:getPosition()
         --
-        -- myTank.hull:offsetPosition(xOffset, yOffset, angleOffset)
-        --
-        --
-        --
-        --
-        --
-        --
-        --
-        --
-        -- local mouseX, mouseY = love.mouse.getPosition()
-        -- local weaponX, weaponY, _ = myTank.weapon:getPosition()  -- Note that this isn't perfect because the weapon position has not yet been updated.
-        --
-        -- local cursorDistanceX = mouseX - weaponX
-        -- local cursorDistanceY = mouseY - weaponY
-        -- local cursorDistance = math.sqrt(cursorDistanceX^2 + cursorDistanceY^2)
-        -- local weaponAngle = 0
-        -- if cursorDistance ~= 0 then
-        --     weaponAngle = math.asin(cursorDistanceX / cursorDistance) - math.pi
-        --     if cursorDistanceY < 0 then
-        --         weaponAngle = math.pi - weaponAngle
-        --     end
-        -- end
-        --
-        -- myTank:setWeaponAngle(weaponAngle)
-
-
-
+        -- tank.hull:offsetPosition(xOffset, yOffset, angleOffset)
 
 
 
@@ -123,7 +106,7 @@ function love.update(dt)
 
     --------------TODO: MOVE TANKS HERE!!!!!!
 
-    --Make sure this didn't cause collisions.
+    --Make sure this didn't cause collisions.-----------------------------------------TODO: DO THIS WHEN PROCESSING COMMANDS!
     for i, otherTank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
         if myTank.hull.hitbox:collidesWith(otherTank.hull.hitbox) then
             myTank.hull:setPosition(currentX, currentY, currentAngle)

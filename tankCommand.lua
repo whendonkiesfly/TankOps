@@ -5,7 +5,9 @@ local library = {}
 function library.CreateTankCommand()
 
 
-    local TankCommand = {}
+    local TankCommand = {
+        target = {x=0, y=0},
+    }
 
     function TankCommand.setHullRotation(cmd, value)
         if value < -1.0 or value > 1.0 then
