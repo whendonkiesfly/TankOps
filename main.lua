@@ -11,6 +11,11 @@ function love.resize(w, h)
   print(("Window resized to width: %d and height: %d."):format(w, h))
 end
 
+
+
+local playerDatas = {}
+
+
 function love.load(args)
 
     setupWindow()
@@ -18,9 +23,23 @@ function love.load(args)
 
     myTank = tankLib.CreateTank(1, 1, "A")
     myTank:setPosition(200, 200, 0, 0)
+    player1 = {
+        tankID = myTank.id,
+        controller = assert( love.filesystem.load( "tankControllerKeyboard.lua" ) )( )
+    }
+    playerDatas[#playerDatas+1] = player1
 
-    otherTank = tankLib.CreateTank(2, 2, "B")
-    otherTank:setPosition(400, 400, 0, 0)
+
+    anotherTank = tankLib.CreateTank(1, 1, "A")
+    anotherTank:setPosition(400, 400, 0, 0)
+    player2 = {
+        tankID = anotherTank.id,
+        controller = assert( love.filesystem.load( "tankControllerKeyboard.lua" ) )( )
+    }
+    playerDatas[#playerDatas+1] = player2
+
+    -- otherTank = tankLib.CreateTank(2, 2, "B")
+    -- otherTank:setPosition(400, 400, 0, 0)
 
     -- bunker = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL)
     -- bunker:setPosition(600, 600, 0)
@@ -50,29 +69,59 @@ function love.load(args)
 end
 
 function love.update(dt)
-    local speed = 0
-    local angleOffset = 0
-    if love.keyboard.isDown("a") then
-        angleOffset = (angleOffset + math.pi / 5) * dt
-    end
-    if love.keyboard.isDown("d") then
-        angleOffset = (angleOffset - math.pi / 5) * dt
-    end
-    if love.keyboard.isDown("w") then
-        speed = speed - 100
-    end
-    if love.keyboard.isDown("s") then
-        speed = speed + 100
+
+    --Execute all tank controller's update functions.
+    local commands = {}
+    -- for id, tank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
+    for i, playerData in ipairs(playerDatas) do
+        commands[playerData.tankID] = playerData.controller:update(playerData.tankID, dt)
     end
 
-    local tankX, tankY, angle = myTank.hull:getPosition()
-    angle = angle + angleOffset * dt
-    local xOffset = math.sin(angle) * speed * dt
-    local yOffset = math.cos(angle) * speed * dt
+    --Process all tank commands.
+    for id, command in pairs(commands) do
 
-    local currentX, currentY, currentAngle = myTank.hull:getPosition()
+    end
+        -- local tankX, tankY, angle = myTank.hull:getPosition()
+        -- angle = angle + angleOffset * dt
+        -- local xOffset = math.sin(angle) * hullSpeedValue * dt
+        -- local yOffset = math.cos(angle) * hullSpeedValue * dt
+        --
+        -- local currentX, currentY, currentAngle = myTank.hull:getPosition()
+        --
+        -- myTank.hull:offsetPosition(xOffset, yOffset, angleOffset)
+        --
+        --
+        --
+        --
+        --
+        --
+        --
+        --
+        -- local mouseX, mouseY = love.mouse.getPosition()
+        -- local weaponX, weaponY, _ = myTank.weapon:getPosition()  -- Note that this isn't perfect because the weapon position has not yet been updated.
+        --
+        -- local cursorDistanceX = mouseX - weaponX
+        -- local cursorDistanceY = mouseY - weaponY
+        -- local cursorDistance = math.sqrt(cursorDistanceX^2 + cursorDistanceY^2)
+        -- local weaponAngle = 0
+        -- if cursorDistance ~= 0 then
+        --     weaponAngle = math.asin(cursorDistanceX / cursorDistance) - math.pi
+        --     if cursorDistanceY < 0 then
+        --         weaponAngle = math.pi - weaponAngle
+        --     end
+        -- end
+        --
+        -- myTank:setWeaponAngle(weaponAngle)
 
-    myTank.hull:offsetPosition(xOffset, yOffset, angleOffset)
+
+
+
+
+
+
+
+
+    --------------TODO: MOVE TANKS HERE!!!!!!
 
     --Make sure this didn't cause collisions.
     for i, otherTank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
@@ -92,22 +141,6 @@ function love.update(dt)
 
 
 
-
-    local mouseX, mouseY = love.mouse.getPosition()
-    local weaponX, weaponY, _ = myTank.weapon:getPosition()  -- Note that this isn't perfect because the weapon position has not yet been updated.
-
-    local cursorDistanceX = mouseX - weaponX
-    local cursorDistanceY = mouseY - weaponY
-    local cursorDistance = math.sqrt(cursorDistanceX^2 + cursorDistanceY^2)
-    local weaponAngle = 0
-    if cursorDistance ~= 0 then
-        weaponAngle = math.asin(cursorDistanceX / cursorDistance) - math.pi
-        if cursorDistanceY < 0 then
-            weaponAngle = math.pi - weaponAngle
-        end
-    end
-
-    myTank:setWeaponAngle(weaponAngle)
 
 
     for i, bullet in pairs(spriteLib.getSprites(bulletLib.SPRITE_TYPE_BULLET)) do
@@ -147,9 +180,6 @@ function love.update(dt)
 
 end
 
-function love.mousepressed( x, y, button, istouch, presses )
-    myTank:fire()
-end
 
 
 function love.draw()

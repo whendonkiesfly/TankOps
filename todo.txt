@@ -1,3 +1,5 @@
+maybe some sort of iterator to allow bots to get data in a simple format without being able to change them.
+
 --------todo: make tank controller structure for controlling the tank.
 -----log hits and kills to players.
 ---command line arguments to set game up.
