@@ -21,7 +21,7 @@ function love.load(args)
     setupWindow()
 
 
-    myTank = tankLib.CreateTank(1, 1, "A")
+    local myTank = tankLib.CreateTank(1, 1, "A")
     myTank:setPosition(200, 200, 0, 0)
     player1 = {
         tankID = myTank.id,
@@ -30,7 +30,7 @@ function love.load(args)
     playerDatas[#playerDatas+1] = player1
 
 
-    anotherTank = tankLib.CreateTank(1, 1, "A")
+    local anotherTank = tankLib.CreateTank(1, 1, "A")
     anotherTank:setPosition(400, 400, 0, 0)
     player2 = {
         tankID = anotherTank.id,
@@ -80,60 +80,52 @@ function love.update(dt)
     --Process all tank commands.
     for id, command in pairs(commands) do
         local tank = spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)[id]
+        local hullInfo = tankLib.HULL_INFO[tank.hull.hullNum]
 
-        ---todo: move tank!
+        --Calculate new position and angles.
+        local angleOffset = command.hullRotationValue * hullInfo.rotationSpeed * dt
 
+        local tankX, tankY, angle = tank.hull:getPosition()
+        local newAngle = angle + angleOffset
+
+        local xOffset = math.sin(newAngle) * -command.speedValue * hullInfo.linearSpeed * dt
+        local yOffset = math.cos(newAngle) * -command.speedValue * hullInfo.linearSpeed * dt
+
+        --Set the new hull position.
+        tank.hull:offsetPosition(xOffset, yOffset, angleOffset)
+
+
+        --Make sure this didn't cause collisions. If it did, we need to put it back where it was.
+        for i, otherTank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
+            if tank.hull.hitbox:collidesWith(otherTank.hull.hitbox) then
+                tank.hull:setPosition(tankX, tankY, angle)
+                break
+            end
+        end
+        for i, structure in pairs(spriteLib.getSprites(structureLib.SPRITE_TYPE_STRUCTURE)) do
+            if tank.hull.hitbox:collidesWith(structure.hitbox) then
+                tank.hull:setPosition(tankX, tankY, angle)
+                break
+            end
+        end
+
+        --Set the new weapon angle.
         tank:aimAt(command.target.x, command.target.y)
 
-    end
-
-
-
-
-        -- local tankX, tankY, angle = tank.hull:getPosition()
-        -- angle = angle + angleOffset * dt
-        -- local xOffset = math.sin(angle) * hullSpeedValue * dt
-        -- local yOffset = math.cos(angle) * hullSpeedValue * dt
-        --
-        -- local currentX, currentY, currentAngle = tank.hull:getPosition()
-        --
-        -- tank.hull:offsetPosition(xOffset, yOffset, angleOffset)
-
-
-
-
-
-
-    --------------TODO: MOVE TANKS HERE!!!!!!
-
-    --Make sure this didn't cause collisions.-----------------------------------------TODO: DO THIS WHEN PROCESSING COMMANDS!
-    for i, otherTank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
-        if myTank.hull.hitbox:collidesWith(otherTank.hull.hitbox) then
-            myTank.hull:setPosition(currentX, currentY, currentAngle)
-            break
+        if command.shotQueued then
+            tank:fire()
         end
-    end
-    for i, structure in pairs(spriteLib.getSprites(structureLib.SPRITE_TYPE_STRUCTURE)) do
-        if myTank.hull.hitbox:collidesWith(structure.hitbox) then
-            myTank.hull:setPosition(currentX, currentY, currentAngle)
-            break
-        end
+
     end
 
-
-
-
-
-
-
+    --Process bullet movements.
     for i, bullet in pairs(spriteLib.getSprites(bulletLib.SPRITE_TYPE_BULLET)) do
         bullet:processMovement(dt)
     end
 
-
+    --Check for bullet collisions with things.
     ---TODO: IF THIS IS SLOW, LOOK INTO SPACIAL HASH IN HC LIBRARY.
     for i, bullet in pairs(spriteLib.getSprites(bulletLib.SPRITE_TYPE_BULLET)) do
-
         --Check for tank collisions.
         for j, tank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
             if bullet.ownerID ~= tank.id then
@@ -142,7 +134,6 @@ function love.update(dt)
                 end
             end
         end
-
 
         --Check for structure collisions.
         for j, structure in pairs(spriteLib.getSprites(structureLib.SPRITE_TYPE_STRUCTURE)) do

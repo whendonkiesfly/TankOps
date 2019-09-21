@@ -21,12 +21,12 @@ function library.CreateTankCommand()
         if value < -1.0 or value > 1.0 then
             print("Tank speed value must be between -1.0 and 1.0")
         else
-            cmd.speed = value
+            cmd.speedValue = value
         end
     end
 
     function TankCommand.fire(cmd)
-        cmd.fire = true
+        cmd.shotQueued = true
     end
 
     function TankCommand.aimAt(cmd, x, y)

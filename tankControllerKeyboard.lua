@@ -15,12 +15,10 @@ function TankController.update(controller, tankID, dt)
     --Handle hull rotation.
     local hullRotationValue = 0
     if love.keyboard.isDown("a") then
-        -- angleOffset = (angleOffset + math.pi / 5) * dt
         hullRotationValue = hullRotationValue + 1
     end
     if love.keyboard.isDown("d") then
         hullRotationValue = hullRotationValue - 1
-        -- angleOffset = (angleOffset - math.pi / 5) * dt
     end
 
     tankCommand:setHullRotation(hullRotationValue)
@@ -40,7 +38,6 @@ function TankController.update(controller, tankID, dt)
     --Handle aiming.
     local mouseX, mouseY = love.mouse.getPosition()
     tankCommand:aimAt(mouseX, mouseY)
-
 
     return tankCommand
 end
