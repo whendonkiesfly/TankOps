@@ -30,7 +30,15 @@ function library.CreateTankCommand()
     end
 
     function TankCommand.aimAt(cmd, x, y)
-        cmd.target = {x=x, y=y}
+        cmd.weaponMovement = {
+            targetCoords = {x=x, y=y}
+        }
+    end
+
+    function TankCommand.rotateWeapon(cmd, angle)
+        cmd.weaponMovement = {
+            targetAngle = angle
+        }
     end
 
     return TankCommand

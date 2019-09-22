@@ -34,7 +34,7 @@ function love.load(args)
     anotherTank:setPosition(400, 400, 0, 0)
     player2 = {
         tankID = anotherTank.id,
-        controller = assert( love.filesystem.load( "tankControllerKeyboard.lua" ) )( )
+        controller = assert( love.filesystem.load( "tankControllerGamepad.lua" ) )( )
     }
     playerDatas[#playerDatas+1] = player2
 
@@ -83,16 +83,16 @@ function love.update(dt)
         local hullInfo = tankLib.HULL_INFO[tank.hull.hullNum]
 
         --Calculate new position and angles.
-        local angleOffset = command.hullRotationValue * hullInfo.rotationSpeed * dt
+        local hullAngleOffset = command.hullRotationValue * hullInfo.rotationSpeed * dt
 
         local tankX, tankY, angle = tank.hull:getPosition()
-        local newAngle = angle + angleOffset
+        local newAngle = angle + hullAngleOffset
 
         local xOffset = math.sin(newAngle) * -command.speedValue * hullInfo.linearSpeed * dt
         local yOffset = math.cos(newAngle) * -command.speedValue * hullInfo.linearSpeed * dt
 
         --Set the new hull position.
-        tank.hull:offsetPosition(xOffset, yOffset, angleOffset)
+        tank.hull:offsetPosition(xOffset, yOffset, hullAngleOffset)
 
 
         --Make sure this didn't cause collisions. If it did, we need to put it back where it was.
@@ -110,7 +110,25 @@ function love.update(dt)
         end
 
         --Set the new weapon angle.
-        tank:aimAt(command.target.x, command.target.y)
+        local angleSet = false
+        if command.weaponMovement then
+            if command.weaponMovement.targetCoords then
+                local coords = command.weaponMovement.targetCoords
+                tank:aimAt(coords.x, coords.y)
+                angleSet = true
+            elseif command.weaponMovement.targetAngle then
+                tank:setWeaponAngle(command.weaponMovement.targetAngle)
+                angleSet = true
+            end
+        end
+
+        --If we didn't set the angle, just rotate it with the tank.
+        if not angleSet then
+            tank:offsetWeaponAngle(hullAngleOffset)
+        end
+
+
+        --TODO: IF NO ANGLE SET, WE NEED TO UPDATE HULL POSITION.
 
         if command.shotQueued then
             tank:fire()

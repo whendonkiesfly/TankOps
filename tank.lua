@@ -104,6 +104,10 @@ function library.CreateTank(hullNum, weaponNum, colorLetter)
         self.weapon:setPosition(x, y, angle)
     end
 
+    function newTank.offsetWeaponAngle(self, angleOffset)
+        local _, _, currentAngle = self.weapon:getPosition()
+        self:setWeaponAngle(currentAngle + angleOffset)
+    end
 
 
 
