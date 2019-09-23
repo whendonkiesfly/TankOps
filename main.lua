@@ -141,13 +141,14 @@ function love.update(dt)
         end
     end
 
-
-
     spriteLib.cleanupSprites()
 
     if checkGameOver() then
         print("Player " .. library.gameLogTable.winner .. " wins!")
         print("game over!")
+        for k, player in ipairs(playerDatas) do
+            player.controller:onGameEnd(i)
+        end
         love.event.quit()
     end
 

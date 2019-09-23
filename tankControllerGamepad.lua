@@ -71,7 +71,7 @@ end
 
 
 
-function TankController.onGameEnd(controller, win, statistics)
+function TankController.onGameEnd(controller, playerID)
 
 end
 
