@@ -24,6 +24,14 @@ function love.load(args)
     controller1 = args[1]
     controller2 = args[2]
 
+
+    print(controller1, controller2)
+    if controller1 == nil or controller2 == nil then
+        print("Oops! I need two parameters which are the names of the tank controllers!")
+        love.event.quit()
+        return
+    end
+
     setupWindow()
 
     --Setup player 1
