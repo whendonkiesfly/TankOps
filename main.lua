@@ -40,7 +40,7 @@ function love.load(args)
     myTank:setPosition(150, DEFAULT_RESOLUTION.height/2, -math.pi/2, 0)
     player1 = {
         tankID = myTank.id,
-        controller = assert(love.filesystem.load("tankController"..controller1..".lua"))()
+        controller = assert(love.filesystem.load("controllers/"..controller1..".lua"))()
     }
     player1.controller:init(playerNum)
     playerDatas[#playerDatas+1] = player1
@@ -51,7 +51,7 @@ function love.load(args)
     anotherTank:setPosition(DEFAULT_RESOLUTION.width-150, DEFAULT_RESOLUTION.height/2, math.pi/2, 0)
     player2 = {
         tankID = anotherTank.id,
-        controller = assert(love.filesystem.load("tankController"..controller2..".lua"))()
+        controller = assert(love.filesystem.load("controllers/"..controller2..".lua"))()
     }
     player2.controller:init(playerNum)
     playerDatas[#playerDatas+1] = player2
