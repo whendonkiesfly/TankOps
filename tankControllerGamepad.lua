@@ -9,25 +9,6 @@ TankController = {}
 
 local FIRE_BUTTON_NUMBER = 6
 
-if globalJoystickIndex == nil then
-    globalJoystickIndex = 1
-else
-    globalJoystickIndex = globalJoystickIndex + 1
-end
-
---Initialize the joysticks one time globally.
-if globalJoysticksList == nil then
-    globalJoysticksList = love.joystick.getJoysticks()
-end
-
---Make sure there are enough controllers plugged in.
-assert(globalJoystickIndex <= #globalJoysticksList, "Failed to get controller")
-
---Store the controller assocated with this instance of the tank controller.
-TankController.joystick = globalJoysticksList[globalJoystickIndex]
-
-
-print("Controller found", TankController.joystick:getName(), TankController.joystick:getGUID())
 
 
 --A basic analog deadband for the joysticks.
@@ -37,6 +18,29 @@ local function deadband(val)
     end
 
     return val
+end
+
+
+function TankController.init(controller, playerID)
+    if globalJoystickIndex == nil then
+        globalJoystickIndex = 1
+    else
+        globalJoystickIndex = globalJoystickIndex + 1
+    end
+
+    --Initialize the joysticks one time globally.
+    if globalJoysticksList == nil then
+        globalJoysticksList = love.joystick.getJoysticks()
+    end
+
+    --Make sure there are enough controllers plugged in.
+    assert(globalJoystickIndex <= #globalJoysticksList, "Failed to get controller")
+
+    --Store the controller assocated with this instance of the tank controller.
+    TankController.joystick = globalJoysticksList[globalJoystickIndex]
+
+
+    print("Controller found", TankController.joystick:getName(), TankController.joystick:getGUID())
 end
 
 

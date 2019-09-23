@@ -3,6 +3,12 @@ tankCommandLib = require "tankCommand"
 
 TankController = {}
 
+
+function TankController.init(controller, playerID)
+
+end
+
+
 function TankController.update(controller, tankID, dt)
 
     local tankCommand = tankCommandLib.CreateTankCommand()

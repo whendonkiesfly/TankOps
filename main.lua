@@ -35,21 +35,25 @@ function love.load(args)
     setupWindow()
 
     --Setup player 1
-    local myTank = tankLib.CreateTank(1, 1, "A", 1)
+    local playerNum = 1
+    local myTank = tankLib.CreateTank(2, 2, "A", playerNum)
     myTank:setPosition(150, DEFAULT_RESOLUTION.height/2, -math.pi/2, 0)
     player1 = {
         tankID = myTank.id,
         controller = assert(love.filesystem.load("tankController"..controller1..".lua"))()
     }
+    player1.controller:init(playerNum)
     playerDatas[#playerDatas+1] = player1
 
     --Setup player 2
-    local anotherTank = tankLib.CreateTank(1, 1, "B", 2)
+    local playerNum = 2
+    local anotherTank = tankLib.CreateTank(3, 3, "B", playerNum)
     anotherTank:setPosition(DEFAULT_RESOLUTION.width-150, DEFAULT_RESOLUTION.height/2, math.pi/2, 0)
     player2 = {
         tankID = anotherTank.id,
         controller = assert(love.filesystem.load("tankController"..controller2..".lua"))()
     }
+    player2.controller:init(playerNum)
     playerDatas[#playerDatas+1] = player2
 
     buildMap()
