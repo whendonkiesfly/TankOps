@@ -26,6 +26,10 @@ function library.logShotFired(shooterID)
     library.gameLogTable.shotsFired[shooterID] = library.gameLogTable.shotsFired[shooterID] + 1
 end
 
+function library.logWinner(winnerID)
+    library.gameLogTable.winner = winnerID
+end
+
 
 --Need to do this to initialize the table.
 library.resetLog()

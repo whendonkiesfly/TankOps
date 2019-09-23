@@ -83,9 +83,10 @@ function CreateTankWeapon(weaponNum, colorLetter)
 end
 
 
-function library.CreateTank(hullNum, weaponNum, colorLetter)
+function library.CreateTank(hullNum, weaponNum, colorLetter, playerID)
     newTank = {}
     newTank.hull = CreateTankHull(hullNum, colorLetter)
+    newTank.playerID = playerID
     newTank.weapon = CreateTankWeapon(hullNum, colorLetter)
     newTank.id = spriteLib.getNextSpriteID()
     newTank.bulletType =  bulletLib.BULLET_TYPES["light"]
@@ -162,7 +163,7 @@ function library.CreateTank(hullNum, weaponNum, colorLetter)
     end
 
     function newTank.processBulletHit(self, bullet)
-        loggerLib.logBulletHit(bullet.ownerID, self.id)
+        loggerLib.logBulletHit(bullet.ownerID, self.playerID)
         bullet:markForDeletion()
         self:offsetHealth(-bullet.bulletInfo.damage)
 
@@ -170,7 +171,7 @@ function library.CreateTank(hullNum, weaponNum, colorLetter)
         if not self:isAlive() then
             self:markForDeletion()
             --log the kill.
-            loggerLib.logKill(bullet.ownerID, self.id)
+            loggerLib.logKill(bullet.ownerID, self.playerID)
         end
 
     end
@@ -187,10 +188,10 @@ function library.CreateTank(hullNum, weaponNum, colorLetter)
         local currentTime = socket.gettime()
         if self:readyToFire(currentTime) then
             self.lastShotTime = currentTime
-            local bullet = bulletLib.CreateBullet(self.bulletType, self.id)
+            local bullet = bulletLib.CreateBullet(self.bulletType, self.playerID)
             local x, y, angle = self.weapon:tipPosition()
             bullet:setPosition(x, y, angle)
-            loggerLib.logShotFired(self.id)
+            loggerLib.logShotFired(self.playerID)
             return bullet
         else
             --Max ROF exceeded.

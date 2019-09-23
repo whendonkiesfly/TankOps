@@ -3,6 +3,7 @@ spriteLib = require "sprite"
 tankLib = require "tank"
 structureLib = require "structure"
 bulletLib = require "bullet"
+loggerLib = require "gameLogger"
 
 local DEFAULT_RESOLUTION = {width=1280, height=1024}
 
@@ -16,57 +17,39 @@ end
 local playerDatas = {}
 
 
+
+
 function love.load(args)
+
+    controller1 = args[1]
+    controller2 = args[2]
 
     setupWindow()
 
-
-    local myTank = tankLib.CreateTank(1, 1, "A")
-    myTank:setPosition(200, 200, 0, 0)
+    --Setup player 1
+    local myTank = tankLib.CreateTank(1, 1, "A", 1)
+    myTank:setPosition(150, DEFAULT_RESOLUTION.height/2, -math.pi/2, 0)
     player1 = {
         tankID = myTank.id,
-        controller = assert( love.filesystem.load( "tankControllerKeyboard.lua" ) )( )
+        controller = assert(love.filesystem.load("tankController"..controller1..".lua"))()
     }
     playerDatas[#playerDatas+1] = player1
 
-
-    local anotherTank = tankLib.CreateTank(1, 1, "A")
-    anotherTank:setPosition(400, 400, 0, 0)
+    --Setup player 2
+    local anotherTank = tankLib.CreateTank(1, 1, "B", 2)
+    anotherTank:setPosition(DEFAULT_RESOLUTION.width-150, DEFAULT_RESOLUTION.height/2, math.pi/2, 0)
     player2 = {
         tankID = anotherTank.id,
-        controller = assert( love.filesystem.load( "tankControllerGamepad.lua" ) )( )
+        controller = assert(love.filesystem.load("tankController"..controller2..".lua"))()
     }
     playerDatas[#playerDatas+1] = player2
 
-    -- otherTank = tankLib.CreateTank(2, 2, "B")
-    -- otherTank:setPosition(400, 400, 0, 0)
-
-    -- bunker = CreateStructure(BUILDING_TYPES.RED_BRICK_WALL)
-    -- bunker:setPosition(600, 600, 0)
-
-
-
-    --Build the map. TODO: MAKE A FUNCTION TO MAKE MAP BOUNDS.
-    local wallWidth = math.ceil(DEFAULT_RESOLUTION.width / structureLib.BUILDING_TYPES.RED_BRICK_WALL.width)+1
-    local wallHeight = math.ceil(DEFAULT_RESOLUTION.width / structureLib.BUILDING_TYPES.RED_BRICK_WALL.height)+1
-    local widthOffset = math.ceil(structureLib.BUILDING_TYPES.RED_BRICK_WALL.width / 2)
-    local heightOffset = math.ceil(structureLib.BUILDING_TYPES.RED_BRICK_WALL.height / 2)
-    --Top horizontal wall
-    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, -widthOffset, -heightOffset, wallWidth, -math.pi/2, 0)
-    --Lower horizontal wall
-    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, -widthOffset, DEFAULT_RESOLUTION.height+heightOffset, wallWidth, -math.pi/2, 0)
-    --Left vertical wall
-    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, -widthOffset, DEFAULT_RESOLUTION.height+heightOffset, wallHeight, 0, 0)
-    --Right vertical wall
-    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, DEFAULT_RESOLUTION.width+widthOffset, DEFAULT_RESOLUTION.height+heightOffset, wallHeight, 0, 0)
-
-
-
-    -- local imageAngle = 0
-    -- local structureCount = 1
-    -- local repeatAngle = math.pi/8
-    -- wall = structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, 400, 500, structureCount, repeatAngle, imageAngle)
+    buildMap()
 end
+
+
+
+
 
 function love.update(dt)
 
@@ -127,9 +110,6 @@ function love.update(dt)
             tank:offsetWeaponAngle(hullAngleOffset)
         end
 
-
-        --TODO: IF NO ANGLE SET, WE NEED TO UPDATE HULL POSITION.
-
         if command.shotQueued then
             tank:fire()
         end
@@ -146,7 +126,7 @@ function love.update(dt)
     for i, bullet in pairs(spriteLib.getSprites(bulletLib.SPRITE_TYPE_BULLET)) do
         --Check for tank collisions.
         for j, tank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
-            if bullet.ownerID ~= tank.id then
+            if bullet.ownerID ~= tank.playerID then
                 if bullet.hitbox:collidesWith(tank.hull.hitbox) then
                     tank:processBulletHit(bullet)
                 end
@@ -166,6 +146,7 @@ function love.update(dt)
     spriteLib.cleanupSprites()
 
     if checkGameOver() then
+        print("Player " .. library.gameLogTable.winner .. " wins!")
         print("game over!")
         love.event.quit()
     end
@@ -193,10 +174,44 @@ end
 function checkGameOver()
     --todo: make this fancier. right now it just waits until only one tank is left.
     count = 0
-    for i, k in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do count = count + 1 end
+    local livingTank = nil
+    for i, k in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
+        count = count + 1
+        livingTank = k
+    end
     if count < 2 then
+        if livingTank then
+            local winnerTank = spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)[1]
+            loggerLib.logWinner(livingTank.playerID)
+        else
+            loggerLib.logWinner("tie")
+        end
         return true
     else
         return false
     end
+end
+
+
+
+function buildMap()
+    local wallWidth = math.ceil(DEFAULT_RESOLUTION.width / structureLib.BUILDING_TYPES.RED_BRICK_WALL.width)+1
+    local wallHeight = math.ceil(DEFAULT_RESOLUTION.width / structureLib.BUILDING_TYPES.RED_BRICK_WALL.height)+1
+    local widthOffset = math.ceil(structureLib.BUILDING_TYPES.RED_BRICK_WALL.width / 2)
+    local heightOffset = math.ceil(structureLib.BUILDING_TYPES.RED_BRICK_WALL.height / 2)
+    --Top horizontal wall
+    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, -widthOffset, -heightOffset, wallWidth, -math.pi/2, 0)
+    --Lower horizontal wall
+    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, -widthOffset, DEFAULT_RESOLUTION.height+heightOffset, wallWidth, -math.pi/2, 0)
+    --Left vertical wall
+    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, -widthOffset, DEFAULT_RESOLUTION.height+heightOffset, wallHeight, 0, 0)
+    --Right vertical wall
+    structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, DEFAULT_RESOLUTION.width+widthOffset, DEFAULT_RESOLUTION.height+heightOffset, wallHeight, 0, 0)
+
+
+
+    local imageAngle = 0
+    local structureCount = 1
+    local repeatAngle = math.pi/4
+    wall = structureLib.CreateStructure(structureLib.BUILDING_TYPES.RED_BRICK_WALL, DEFAULT_RESOLUTION.width/2, DEFAULT_RESOLUTION.height/2, structureCount, repeatAngle, imageAngle)
 end
