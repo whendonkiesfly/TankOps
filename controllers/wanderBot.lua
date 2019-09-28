@@ -2,7 +2,6 @@
 
 local tankCommandLib = require "tankCommand"
 local loggerLib = require "gameLogger"
-local spriteLib = require "sprite"
 local socket = require "socket"
 
 --Seed the random number generator.
@@ -20,7 +19,13 @@ end
 
 
 --This is called each frame.
-function TankController.update(controller, tankID, dt)
+function TankController.update(controller, tankID, worldInfo, dt)
+
+    for k, v in pairs(worldInfo) do
+        for i, j in pairs(v) do
+            for x, y in pairs(j) do print(x, y) end
+        end
+    end
 
     --Create a tank command.
     local tankCommand = tankCommandLib.CreateTankCommand()
@@ -32,8 +37,6 @@ function TankController.update(controller, tankID, dt)
         controller.newPlanTime = socket.gettime() + 1  -- reconsider our path in a second.
     end
 
-    --If we wanted, we couldfind all the walls and tanks using spriteLib.getSprites in order to drive intellegently.
-
     --Set the rate of rotation for the tank. -1 indicates to rotate counter-clockwise at full speed, 1 is clockwise at full speed, and 0 is no rotation.
     tankCommand:setHullRotation(controller.rotationValue)
 
@@ -44,7 +47,7 @@ function TankController.update(controller, tankID, dt)
 
     --We can iterate through the list of tanks to find an enemy.
     local enemy = nil
-    for id, tank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
+    for id, tank in pairs(worldInfo[tankLib.SPRITE_TYPE_TANK]) do
         --Check to see if this is our tank or a different one.
         if id ~= tankID then
             --We found an enemy!
@@ -56,8 +59,8 @@ function TankController.update(controller, tankID, dt)
     end
 
     if enemy then
-        local enemyXPos, enemyYPos, _ = enemy:getPosition()
-        tankCommand:aimAt(enemyXPos, enemyYPos)
+        -- local enemyXPos, enemyYPos, _ = enemy:getPosition()
+        tankCommand:aimAt(enemy.position.x, enemy.position.y)
         --Alternatively, you can aim using an angle in radians.
         -- tankCommand:rotateWeapon(angleRads)
 

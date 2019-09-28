@@ -69,6 +69,14 @@ function library.CreateStructure(structureInfo, xPos, yPos, structureCount, repe
         end
     end
 
+    function wall.getInfo(self)
+        local x1, y1, x2, y2 = self.hitbox:bbox()
+        return {
+            position = {x=posX, y=posY, angle=angle},
+            bbox = {x1=x1, y1=y1, x2=x2, y2=y2},
+        }
+    end
+
     spriteLib.setManagedSprite(wall, library.SPRITE_TYPE_STRUCTURE)
 
     return wall

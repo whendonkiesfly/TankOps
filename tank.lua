@@ -93,6 +93,16 @@ function library.CreateTank(hullNum, weaponNum, colorLetter, playerID)
     newTank.health = 100
     newTank.lastShotTime = 0
 
+    function newTank.getInfo(self)
+        local posX, posY, angle = self.hull:getPosition()
+        local x1, y1, x2, y2 = self.hull.hitbox:bbox()
+        return {
+            health = self.health,
+            position = {x=posX, y=posY, angle=angle},
+            bbox = {x1=x1, y1=y1, x2=x2, y2=y2},
+        }
+    end
+
     function newTank.setPosition(self, hullX, hullY, hullAngle, weaponAngle)
         self.hull:setPosition(hullX, hullY, hullAngle)
         self:setWeaponAngle(weaponAngle)

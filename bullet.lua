@@ -43,6 +43,16 @@ function bulletLib.CreateBullet(bulletInfo, ownerID)
         bullet:setPosition(x, y, angle)
     end
 
+    function newBullet.getInfo(bullet)
+        local posX, posY, angle = bullet:getPosition()
+        local x1, y1, x2, y2 = bullet.hitbox:bbox()
+        return {
+            position = {x=posX, y=posY, angle=angle},
+            ownerID = bullet.ownerID,
+            bbox = {x1=x1, y1=y1, x2=x2, y2=y2},
+        }
+    end
+
     newBullet.ownerID = ownerID
 
     return newBullet

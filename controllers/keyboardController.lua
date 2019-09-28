@@ -9,7 +9,7 @@ function TankController.init(controller, playerID)
 end
 
 
-function TankController.update(controller, tankID, dt)
+function TankController.update(controller, tankID, worldInfo dt)
 
     local tankCommand = tankCommandLib.CreateTankCommand()
 

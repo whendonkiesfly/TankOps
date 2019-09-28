@@ -7,6 +7,7 @@ loggerLib = require "gameLogger"
 
 local DEFAULT_RESOLUTION = {width=1280, height=1024}
 
+local SPRITE_TYPES = {tankLib.SPRITE_TYPE_TANK, structureLib.SPRITE_TYPE_STRUCTURE, bulletLib.SPRITE_TYPE_BULLET}
 
 function love.resize(w, h)
   print(("Window resized to width: %d and height: %d."):format(w, h))
@@ -15,7 +16,6 @@ end
 
 
 local playerDatas = {}
-
 
 
 
@@ -67,9 +67,25 @@ function love.update(dt)
 
     --Execute all tank controller's update functions.
     local commands = {}
+
+    local worldData = {}
+    --Get info on sprites of each type.
+    for i, spriteType in ipairs(SPRITE_TYPES) do
+        if worldData[spriteType] == nil then
+            worldData[spriteType] = {}
+        end
+
+        --Get info about all the sprites of this type.
+        local sprites = spriteLib.getSprites(spriteType)
+        for id, sprite in pairs(sprites) do
+            worldData[spriteType][id] = sprite:getInfo()
+        end
+
+    end
+
     -- for id, tank in pairs(spriteLib.getSprites(tankLib.SPRITE_TYPE_TANK)) do
     for i, playerData in ipairs(playerDatas) do
-        commands[playerData.tankID] = playerData.controller:update(playerData.tankID, dt)
+        commands[playerData.tankID] = playerData.controller:update(playerData.tankID, worldData, dt)
     end
 
     --Process all tank commands.
